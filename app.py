@@ -20,9 +20,9 @@ ore_list = [247440, 259820, 272810, 286450, 300770, 315810, 331600, 348180, 3655
 # 卷軸需求 (原始卷數 * 3 再打82折四捨五入)
 scroll_list = [5188, 5449, 5720, 6007, 6307, 6622, 6952, 7301, 7665, 8049]
 
-# 防刷紀錄 (記錄每個 user id 最近一次處理時間)
+# 防刷紀錄
 user_last_action = {}
-cooldown_seconds = 2  # 設定 2 秒冷卻
+cooldown_seconds = 2
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -50,11 +50,9 @@ def handle_message(event):
     user_id = event.source.user_id
     now = time.time()
 
-    # 防惡刷機制
     last_action = user_last_action.get(user_id, 0)
     if now - last_action < cooldown_seconds:
-        return  # 靜默丟掉重複請求
-
+        return
     user_last_action[user_id] = now
 
     text = event.message.text.strip().replace('\u3000', ' ')
@@ -101,7 +99,17 @@ def handle_message(event):
         else:
             break
 
-    reply = f"可升級：{levels} 級\n消耗卷：{scrolls} 張\n剩餘礦石：{total_ore} 單位"
+    # 計算總提升百分比
+    total_percent = levels * 1500
+    percent_k = round(total_percent / 10, 1)
+
+    reply = (
+        f"可升級：{levels} 級\n"
+        f"消耗卷：{scrolls} 張\n"
+        f"剩餘礦石：{total_ore} 單位\n"
+        f"預期提升：約 {percent_k}k%"
+    )
+
     line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
 
 if __name__ == "__main__":
