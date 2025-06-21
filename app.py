@@ -5,7 +5,6 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
 app = Flask(__name__)
 
-# 直接內嵌你的金鑰
 CHANNEL_SECRET = '08e002ac70b1e026209541c98a0de0a2'
 CHANNEL_ACCESS_TOKEN = 'P+nUnOsdahIBJobBiMMB/qsXNy5pJs3vZjGmvZcx0No9eKUKb4neemjRudmykIpBtmztusiGtxEe0eW21BiiOOnrWR74e+WYozYv0QrEhCgHIOurdCMv84LGiUBPpwkyhjQ0fr9UXRvLcNzuaqsj5AdB04t89/1O/w1cDnyilFU='
 
@@ -29,18 +28,19 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    text = event.message.text.strip()
+    parts = text.split()
+    
+    if len(parts) != 2:
+        return  # 靜默不回覆
+
     try:
-        parts = event.message.text.strip().split()
-        if len(parts) != 2:
-            raise ValueError
         total_ore = int(parts[0])
         tail = int(parts[1])
         if tail < 1 or tail > 10:
-            raise ValueError
-    except ValueError:
-        reply = "請輸入格式：礦量 尾數\n例如：20000000 5"
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
-        return
+            return  # 靜默不回覆
+    except:
+        return  # 靜默不回覆
 
     ore_needed = ore_list[tail-1]
     scroll_needed = scroll_list[tail-1]
