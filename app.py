@@ -15,8 +15,7 @@ handler = WebhookHandler(CHANNEL_SECRET)
 
 # 礦石需求 (不打折)
 ore_list = [247440, 259820, 272810, 286450, 300770, 315810, 331600, 348180, 365590, 383870]
-
-# 卷軸需求 (原始卷數 * 0.99^20 ≈ 81.79% 折扣)
+# 卷軸需求 (原始卷數 * 0.99^20 折扣約 81.79%)
 scroll_list = [1724, 1812, 1900, 1997, 2098, 2202, 2311, 2427, 2549, 2675]
 
 user_trigger_time = {}
@@ -51,7 +50,7 @@ def parse_ore_input(ore_str):
 def handle_message(event):
     user_id = event.source.user_id
     now = time.time()
-    text = event.message.text.strip().replace('\u3000', ' ')
+    text = event.message.text.strip().replace('\u3000', '')
 
     if text == "科技":
         user_trigger_time[user_id] = now
@@ -67,7 +66,7 @@ def handle_message(event):
 
         user_display_name[user_id] = display_name
 
-        reply = f"{display_name}，請輸入礦量與科技尾數\n（例：20000k 9或是20000 9）"
+        reply = f"{display_name}，請輸入礦量/加速卷數量/科技尾數\n（例：20000k/50000/9）"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
         return
 
@@ -80,16 +79,28 @@ def handle_message(event):
         return
     user_last_action[user_id] = now
 
-    parts = text.split()
-    if len(parts) != 2:
+    parts = text.split('/')
+    if len(parts) not in [2, 3]:
         return
 
     ore_str = parts[0]
-    tail_str = parts[1]
-
     total_ore = parse_ore_input(ore_str)
     if total_ore is None:
         return
+
+    if len(parts) == 2:
+        # 無卷軸限制模式
+        scroll_limit = None
+        tail_str = parts[1]
+    else:
+        scroll_limit_str = parts[1]
+        tail_str = parts[2]
+        try:
+            scroll_limit = int(scroll_limit_str)
+            if scroll_limit < 0:
+                return
+        except:
+            return
 
     try:
         tail = int(tail_str)
@@ -108,28 +119,31 @@ def handle_message(event):
         return
 
     total_ore -= ore_needed
+    total_scrolls = scroll_needed
     levels = 1
-    scrolls = scroll_needed
 
     index = (current_index + 1) % 10
     while True:
         ore_next = ore_list[index]
+        scroll_next = scroll_list[index]
+
         if total_ore >= ore_next:
+            if scroll_limit is not None and (total_scrolls + scroll_next) > scroll_limit:
+                break
             total_ore -= ore_next
+            total_scrolls += scroll_next
             levels += 1
-            scrolls += scroll_list[index]
             index = (index + 1) % 10
         else:
             break
 
-    total_percent = levels * 1500  # 正確百分比
+    total_percent = levels * 1500
     percent_k = round(total_percent / 1000, 1)
-
     display_name = user_display_name.get(user_id, "使用者")
 
     reply = (
         f"{display_name}，可升級：{levels} 級\n"
-        f"消耗卷：{scrolls} 張\n"
+        f"消耗卷：{total_scrolls} 張\n"
         f"剩餘礦石：{total_ore} 單位\n"
         f"預期提升：約 {percent_k}k%"
     )
