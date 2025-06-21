@@ -12,7 +12,7 @@ line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
 ore_list = [247440, 259820, 272810, 286450, 300770, 315810, 331600, 348180, 365590, 383870]
-scroll_list = [2109, 2215, 2325, 2442, 2564, 2692, 2826, 2968, 3116, 3272]
+scroll_list = [1730, 1816, 1905, 2002, 2102, 2207, 2317, 2434, 2555, 2683]
 
 @app.route("/callback", methods=['POST'])
 def callback():
