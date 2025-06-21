@@ -14,7 +14,7 @@ line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
 ore_list = [247440, 259820, 272810, 286450, 300770, 315810, 331600, 348180, 365590, 383870]
-scroll_list = [5188, 5449, 5720, 6007, 6307, 6622, 6952, 7301, 7665, 8049]
+scroll_list = [1729, 1816, 1905, 2002, 2102, 2207, 2317, 2434, 2555, 2683]  # 已直接82折
 
 user_trigger_time = {}
 user_display_name = {}
@@ -53,10 +53,7 @@ def handle_message(event):
     if text == "科技":
         user_trigger_time[user_id] = now
 
-        # 預設暱稱
         display_name = "使用者"
-
-        # 群組內抓取暱稱
         if event.source.type == 'group':
             group_id = event.source.group_id
             try:
@@ -71,12 +68,10 @@ def handle_message(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
         return
 
-    # 非觸發詞，判斷是否進入等待模式
     trigger_time = user_trigger_time.get(user_id)
     if not trigger_time or now - trigger_time > trigger_valid_seconds:
         return
 
-    # 防刷
     last_action = user_last_action.get(user_id, 0)
     if now - last_action < cooldown_seconds:
         return
