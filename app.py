@@ -13,8 +13,11 @@ CHANNEL_ACCESS_TOKEN = 'P+nUnOsdahIBJobBiMMB/qsXNy5pJs3vZjGmvZcx0No9eKUKb4neemjR
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
+# 礦石需求 (不打折)
 ore_list = [247440, 259820, 272810, 286450, 300770, 315810, 331600, 348180, 365590, 383870]
-scroll_list = [1729, 1816, 1905, 2002, 2102, 2207, 2317, 2434, 2555, 2683]  # 已直接82折
+
+# 卷軸需求 (原始卷數 * 0.99^20 ≈ 81.79% 折扣)
+scroll_list = [1724, 1812, 1900, 1997, 2098, 2202, 2311, 2427, 2549, 2675]
 
 user_trigger_time = {}
 user_display_name = {}
@@ -119,8 +122,9 @@ def handle_message(event):
         else:
             break
 
-    total_percent = levels * 1500
-    percent_k = round(total_percent / 10, 1)
+    total_percent = levels * 1500  # 正確百分比
+    percent_k = round(total_percent / 1000, 1)
+
     display_name = user_display_name.get(user_id, "使用者")
 
     reply = (
